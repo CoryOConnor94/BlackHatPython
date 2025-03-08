@@ -1,26 +1,46 @@
-#!/usr/bin/env python
-from asyncio import timeout
-
+#!/usr/bin/env python3
 import scapy.all as scapy
-from scapy.layers.l2 import ARP, Ether
-
-def scan(ip):
-    arp_request = ARP(pdst=ip)  # Create ARP request to ask for given IP
-    # print(arp_request.summary())
-    arp_request.show()
-    broadcast = Ether(dst='ff:ff:ff:ff:ff:ff')  # Set destination MAC to broadcast MAC
-    # scapy.ls(Ether())
-    broadcast.show()
-    arp_request_broadcast = broadcast/arp_request   # Combine packets
-    arp_request_broadcast.show()
-    answered_list, unanswered_list = scapy.srp(arp_request_broadcast, timeout=1)    # Send packet and receive answered and unanswered responses
-    print(answered_list.summary())
-    print(unanswered_list.summary())
+from scapy.layers.l2 import ARP, Ether, srp
+import argparse
 
 
+def get_arguments():
+    parser = argparse.ArgumentParser()
+    parser.add_argument('-t', '--target', dest='target', help='IP/IP range to scan')
+    options = parser.parse_args()
+    if not options.target:
+        parser.error('[+] Please specify an IP or range of IPs to scan, use --help for more info')
+    return options
 
 
+def discovery_scan(ip):
+    arp_request = ARP(pdst=ip)  # Create ARP request to ask who has given IP
+    broadcast = Ether(dst='ff:ff:ff:ff:ff:ff')  # Create Ethernet frame and Set destination MAC to broadcast MAC
+    arp_request_broadcast = broadcast/arp_request   # Append ARP request to Ethernet frame
 
-scan('192.168.0.1/24')
+    # Send packet and receive answered and unanswered responses
+    answered_list = srp(arp_request_broadcast, timeout=1, verbose=False)[0]
+
+    results_list = []
+    for element in answered_list:
+        results_list.append({'IP': element[1].psrc, 'MAC': element[1].hwsrc})
+
+    return results_list
+
+
+def print_results(results):
+    for client in results:
+        print(f'[+]IP = {client["IP"]}\n[+]MAC = {client["MAC"]}')
+        print('------------------------------------------------')
+
+
+def main():
+    options = get_arguments()
+    discovery_results = discovery_scan(options.target)
+    print_results(discovery_results)
+
+
+if __name__ == '__main__':
+    main()
 
 
