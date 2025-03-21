@@ -7,7 +7,7 @@ queue.run()
 
 def process_packet(packet):
     scapy_packet = scapy.IP(packet.get_payload())
-    # print(scapy_packet.show())
+    # print(scapy_packet.show())    # Testing
     if scapy_packet.haslayer(scapy.DNSRR):
         qname = scapy_packet[scapy.DNSQR].qname     # Retrieve user reqested domain name in variable
         if 'www.bing.com' in qname:
