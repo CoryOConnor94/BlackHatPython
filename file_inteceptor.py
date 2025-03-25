@@ -16,4 +16,4 @@ def process_packet(packet):
             print('This is a HTTP Response')
             print(scapy_packet.show())
 
-    packet.accept()
+    packet.accept()     # Accept packet
